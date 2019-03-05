@@ -1,0 +1,54 @@
+#!/bin/bash
+function usage()
+{
+echo "=== system_auto usage ==="
+echo " " 
+echo "space		Show free space"
+echo "physic		Show Physic space"
+echo "ram		Show RAM memory"
+echo "cpu		Show CPU information"
+echo "authorized	Add authorized keys"
+}
+
+if [[ $# -eq 0 ]];then
+usage
+exit
+fi
+#free space
+if [[ $1=="space" ]];then
+echo -e "=== Free space === \n"
+ansible all  -m shell -a 'df -kh' --forks=1 -u malen
+echo " "
+exit 
+fi
+#physic space
+if [[ $1=="physic" ]];then
+echo -e "=== Physic space === \n"
+ansible all -m shell -a 'sudo fdisk -l' --forks=1 -u malen
+echo " "
+exit 
+fi
+#ram memory
+if [[ $1=="ram" ]];then
+echo -e "=== RAM Memory === \n"
+ansible all -m shell -a 'grep MemTotal /proc/meminfo' --forks=1 -u malen
+echo " "
+exit 
+fi
+#cpu info
+if [[ $1=="cpu" ]];then
+echo "=== CPU Info ==="
+ansible all -m shell -a 'cat /proc/meminfo | grep "model name"' --forks=1 -u malen
+echo " "
+exit 
+fi
+#authorized keys
+if [[ $1=="authorized" ]]:then
+echo "=== Add authorized keys ===" 
+read -p "Add authorized keys: " authorized
+read -p "Specify the server: " server
+read -p "Specify the user: " user
+ansible $server -m authorized_key -a "user=$user key='{{ lookup(\'file\', \'$authorized') }}'" --become --ask-become-pass
+echo " "
+exit
+fi
